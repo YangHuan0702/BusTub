@@ -52,6 +52,11 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   auto ValueAt(int index) const -> ValueType;
   auto KeyIndex(const KeyType &key,const KeyComparator &comparator) const -> int;
   auto Find(const KeyType &key,const KeyComparator &comparator,ValueType *val_out) const -> bool;
+  void Insert(const KeyType &key, const ValueType &val, const KeyComparator &comparator);
+  void DirectInsert(const KeyType &key, const ValueType &val);
+  void MoveHalfTo(BPlusTreeLeafPage *recipient, BufferPoolManager *buffer_pool_manager);
+  auto GetItem(int index) -> const MappingType&;
+  auto Lookup(const KeyType &key, ValueType &value,const KeyComparator &comparator) const -> bool;
 
  private:
   page_id_t next_page_id_;

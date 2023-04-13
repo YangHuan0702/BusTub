@@ -11,6 +11,7 @@
 #pragma once
 
 #include <queue>
+#include <algorithm>
 
 #include "storage/page/b_plus_tree_page.h"
 
@@ -42,6 +43,12 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   void SetKeyAt(int index, const KeyType &key);
   auto ValueAt(int index) const -> ValueType;
   auto LikeVal(const KeyType &key,const KeyComparator &comparator) -> ValueType;
+//  void Insert();
+  auto InsertNodeAfter(const ValueType &old_value, const KeyType &new_key,const ValueType &new_value) -> int;
+  auto ValueIndex(const ValueType &val) -> int;
+  void PopulateNewRoot(const ValueType &old_value, const KeyType &new_key,const ValueType &new_value);
+  void MoveHalfTo(BPlusTreeInternalPage *recipient,BufferPoolManager *buffer_pool_manager);
+  auto Lookup(const KeyType &key,const KeyComparator &comparator) const -> ValueType;
 
  private:
   // Flexible array member for page data. 用于页面数据的灵活数组成员。

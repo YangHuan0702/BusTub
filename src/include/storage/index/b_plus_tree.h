@@ -48,6 +48,12 @@ class BPlusTree {
   // Insert a key-value pair into this B+ tree.
   auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
 
+  auto InsertIntoLeaf(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
+
+  template <typename N> N * Split(N *node);
+
+  void InsertIntoParent(BPlusTreePage *old_node,const KeyType &key,BPlusTreePage *new_node,Transaction *transaction);
+
   // Remove a key and its value from this B+ tree.
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
 
@@ -76,11 +82,14 @@ class BPlusTree {
   // read data from file and remove one by one
   void RemoveFromFile(const std::string &file_name, Transaction *transaction = nullptr);
 
+  auto FindLeafPage(const KeyType &key,bool leftMost = false,bool rightMost = false) -> LeafPage *;
+  auto FetchPage(page_id_t page_id) -> BPlusTreePage *;
+
  private:
 
-  auto GetLeafPage(const KeyType &key) -> Page *;
-
   void UpdateRootPageId(int insert_record = 0);
+
+  void CreateRoot(const KeyType &key,const ValueType &value);
 
   /* Debug Routines for FREE!! */
   void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstream &out) const;

@@ -15,16 +15,40 @@ INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::IndexIterator() = default;
 
 INDEX_TEMPLATE_ARGUMENTS
-INDEXITERATOR_TYPE::~IndexIterator() = default;  // NOLINT
+INDEXITERATOR_TYPE::~IndexIterator() {
+    if (leaf_ != nullptr) {
+        bufferPoolManager_->UnpinPage(leaf_->GetPageId(),false);
+    }
+}
 
 INDEX_TEMPLATE_ARGUMENTS
-auto INDEXITERATOR_TYPE::IsEnd() -> bool { throw std::runtime_error("unimplemented"); }
+INDEXITERATOR_TYPE::IndexIterator(B_PLUS_TREE_LEAF_PAGE_TYPE *leaf, int index, BufferPoolManager *bufferPoolManager)
+            : index_(index),leaf_(leaf), bufferPoolManager_(bufferPoolManager){}
+
 
 INDEX_TEMPLATE_ARGUMENTS
-auto INDEXITERATOR_TYPE::operator*() -> const MappingType & { throw std::runtime_error("unimplemented"); }
+auto INDEXITERATOR_TYPE::IsEnd() -> bool {
+    return leaf_->GetNextPageId() == INVALID_PAGE_ID && index_ == leaf_->GetSize();
+}
 
 INDEX_TEMPLATE_ARGUMENTS
-auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & { throw std::runtime_error("unimplemented"); }
+auto INDEXITERATOR_TYPE::operator*() -> const MappingType & {
+    return leaf_->GetItem(index_);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & {
+    if (index_ == leaf_->GetSize() - 1 && leaf_->GetNextPageId() != INVALID_PAGE_ID) {
+        auto next_page = bufferPoolManager_->FetchPage(leaf_->GetNextPageId());
+        bufferPoolManager_->UnpinPage(leaf_->GetPageId(), false);
+        leaf_ = reinterpret_cast<B_PLUS_TREE_LEAF_PAGE_TYPE *>(next_page->GetData());
+        index_ = 0;
+    } else {
+        index_++;
+    }
+
+    return *this;
+}
 
 template class IndexIterator<GenericKey<4>, RID, GenericComparator<4>>;
 
