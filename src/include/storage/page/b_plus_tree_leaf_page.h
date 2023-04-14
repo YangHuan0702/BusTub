@@ -20,7 +20,6 @@ namespace bustub {
 #define B_PLUS_TREE_LEAF_PAGE_TYPE BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>
 #define LEAF_PAGE_HEADER_SIZE 28
 #define LEAF_PAGE_SIZE ((BUSTUB_PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / sizeof(MappingType))
-
 /**
  * Store indexed key and record id(record id = page id combined with slot id,
  * see include/common/rid.h for detailed implementation) together within leaf
@@ -57,6 +56,13 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void MoveHalfTo(BPlusTreeLeafPage *recipient, BufferPoolManager *buffer_pool_manager);
   auto GetItem(int index) -> const MappingType&;
   auto Lookup(const KeyType &key, ValueType &value,const KeyComparator &comparator) const -> bool;
+  auto KeyIndexPrecise(const KeyType &key,const KeyComparator &comparator) const -> int;
+  void Remove(const KeyType &key,const KeyComparator &comparator);
+
+  void MoveAllTo(BPlusTreeLeafPage *target_leaf,bool mostLeaf);
+  void MoveFirst();
+  void MoveSecond();
+  void SetItem(const KeyType &key,const ValueType &val,int index);
 
  private:
   page_id_t next_page_id_;

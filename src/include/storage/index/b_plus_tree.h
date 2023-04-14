@@ -63,7 +63,7 @@ class BPlusTree {
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
 
-  
+  void Coalesce(BPlusTreePage *sibing_node,BPlusTreePage *node,InternalPage *parent_node,int node_index,bool isLeaf);
 
   // index iterator
   auto Begin() -> INDEXITERATOR_TYPE;
@@ -84,6 +84,14 @@ class BPlusTree {
 
   auto FindLeafPage(const KeyType &key,bool leftMost = false,bool rightMost = false) -> LeafPage *;
   auto FetchPage(page_id_t page_id) -> BPlusTreePage *;
+
+
+  auto FindSibling(BPlusTreePage *node,BPlusTreePage *sibling_node_out) -> int;
+  void AdjustRoot(BPlusTreePage *p);
+
+  void Redistribute(BPlusTreePage *sibling_node,BPlusTreePage *node,int nodeInParentIndex);
+
+  void RemoveMerge(BPlusTreePage *lp);
 
  private:
 

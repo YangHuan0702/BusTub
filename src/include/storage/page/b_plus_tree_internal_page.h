@@ -20,7 +20,8 @@ namespace bustub {
 #define B_PLUS_TREE_INTERNAL_PAGE_TYPE BPlusTreeInternalPage<KeyType, ValueType, KeyComparator>
 #define INTERNAL_PAGE_HEADER_SIZE 24
 #define INTERNAL_PAGE_SIZE ((BUSTUB_PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / (sizeof(MappingType)))
-/**
+
+    /**
  * Store n indexed keys and n+1 child pointers (page_id) within internal page.
  * Pointer PAGE_ID(i) points to a subtree in which all keys K satisfy:
  * K(i) <= K < K(i+1).
@@ -49,6 +50,13 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   void PopulateNewRoot(const ValueType &old_value, const KeyType &new_key,const ValueType &new_value);
   void MoveHalfTo(BPlusTreeInternalPage *recipient,BufferPoolManager *buffer_pool_manager);
   auto Lookup(const KeyType &key,const KeyComparator &comparator) const -> ValueType;
+  auto RemoveAndReturn() -> page_id_t;
+  void Remove(int index);
+  void MoveAllTo(BPlusTreeInternalPage *internalPage,bool mostLeft,BufferPoolManager *bufferPoolManager);
+
+
+  void MoveFirst();
+  void MoveSecond();
 
  private:
   // Flexible array member for page data. 用于页面数据的灵活数组成员。

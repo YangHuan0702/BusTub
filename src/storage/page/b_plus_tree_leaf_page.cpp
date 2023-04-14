@@ -14,6 +14,7 @@
 #include "common/exception.h"
 #include "common/rid.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
+#include "include/storage/page/b_plus_tree_internal_page.h"
 
 namespace bustub {
 
@@ -155,6 +156,74 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::GetItem(int index) -> const MappingType & {
 }
 
 
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndexPrecise(const KeyType &key,const KeyComparator &comparator) const -> int {
+    for(int index = 0; index < GetSize(); index++){
+        if(comparator(array_[index].first,key) == 0){
+            return index;
+        }
+    }
+    return -1;
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::Remove(const KeyType &key,const KeyComparator &comparator) {
+    int index = KeyIndexPrecise(key,comparator);
+    if (index == -1) {
+        return;
+    }
+    if(index < GetSize() - 1){
+        for (int i = index; i < GetSize() - 1;i ++) {
+            array_[index].first = array_[index + 1].first;
+            array_[index].second = array_[index + 1].second;
+        }
+    }
+    IncreaseSize(-1);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirst() {
+    memmove(array_, array_ + 1, static_cast<size_t>(GetSize()*sizeof(MappingType)));
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveSecond() {
+    memmove(array_ + 1, array_, GetSize()*sizeof(MappingType));
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::SetItem(const KeyType &key,const ValueType &val,int index) {
+    assert(index < GetSize());
+    array_[index].first = key;
+    array_[index].second = val;
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *target_leaf,bool mostLeft) {
+    int start_index = target_leaf->GetSize();
+    int offset = GetSize();
+    if (mostLeft) {
+        for(int index = 0; index < offset; index++) {
+            target_leaf->array_[start_index + index].first = array_[index].first;
+            target_leaf->array_[start_index + index].second = array_[index].second;
+        }
+    }else {
+        for (int index = start_index - 1; index >= 0; index --) {
+            target_leaf->array_[index + offset].first = target_leaf->array_[index].first;
+            target_leaf->array_[index + offset].second = target_leaf->array_[index].second;
+        }
+        for (int index = 0; index < offset; index++) {
+            target_leaf->array_[index].first = array_[index].first;
+            target_leaf->array_[index].second = array_[index].second;
+        }
+    }
+    target_leaf->SetNextPageId(GetNextPageId());
+    target_leaf->IncreaseSize(GetSize());
+    SetSize(0);
+}
 
 template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;
 template class BPlusTreeLeafPage<GenericKey<8>, RID, GenericComparator<8>>;

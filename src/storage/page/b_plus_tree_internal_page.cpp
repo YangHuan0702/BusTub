@@ -152,6 +152,73 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(const KeyType &key,const KeyComparat
     return array_[st - 1].second;
 }
 
+INDEX_TEMPLATE_ARGUMENTS
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveAndReturn() -> page_id_t {
+    ValueType v = ValueAt(0);
+    IncreaseSize(-1);
+    return v;
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveFirst() {
+    memmove(array_, array_ + 1, static_cast<size_t>(GetSize()*sizeof(MappingType)));
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveSecond() {
+    memmove(array_ + 1, array_, GetSize()*sizeof(MappingType));
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Remove(int index) {
+    for(int i = index; i < GetSize() - 1; i++) {
+        array_[i].first = array_[i + 1].first;
+        array_[i].second = array_[i + 1].second;
+    }
+    IncreaseSize(-1);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveAllTo(BPlusTreeInternalPage *internalPage,bool mostLeft,BufferPoolManager *bufferPoolManager) {
+    int offset = GetSize();
+    int start_index = internalPage->GetSize();
+
+    auto target_page_id = internalPage->GetPageId();
+    bufferPoolManager->FetchPage(target_page_id);
+    if (mostLeft) {
+        for (int index = 0; index < offset; index ++) {
+
+            Page *p = bufferPoolManager->FetchPage(array_[index].second);
+            auto *conversion_page = reinterpret_cast<BPlusTreeInternalPage *>(p->GetData());
+            conversion_page->SetPageId(target_page_id);
+            bufferPoolManager->UnpinPage(array_[index].second,true);
+
+            internalPage->array_[start_index + index].first = array_[index].first;
+            internalPage->array_[start_index + index].second = array_[index].second;
+        }
+    } else {
+        for (int index = start_index - 1; index >= 0; index++) {
+            internalPage->array_[index + offset].first = internalPage->array_[index].first;
+            internalPage->array_[index + offset].second = internalPage->array_[index].second;
+        }
+        for (int index = 0; index < offset; index++) {
+
+            Page *p = bufferPoolManager->FetchPage(array_[index].second);
+            auto *conversion_page = reinterpret_cast<BPlusTreeInternalPage *>(p->GetData());
+            conversion_page->SetPageId(target_page_id);
+            bufferPoolManager->UnpinPage(array_[index].second,true);
+
+            internalPage->array_[index].first = array_[index].first;
+            internalPage->array_[index].second = array_[index].second;
+        }
+    }
+//    bufferPoolManager->UnpinPage(GetPageId(),true);
+//    bufferPoolManager->UnpinPage(target_page_id,true);
+    internalPage->IncreaseSize(offset);
+    SetSize(0);
+}
 
 // valuetype for internalNode should be page id_t
 template class BPlusTreeInternalPage<GenericKey<4>, page_id_t, GenericComparator<4>>;
