@@ -23,6 +23,8 @@ namespace bustub {
 
 #define BPLUSTREE_TYPE BPlusTree<KeyType, ValueType, KeyComparator>
 
+enum class BTreeOperator { SEARCH, INSERT, DELETE };
+
 /**
  * Main class providing the API for the Interactive B+ Tree.
  *
@@ -63,8 +65,10 @@ class BPlusTree {
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
 
-  void Coalesce(BPlusTreePage *sibing_node,BPlusTreePage *node,InternalPage *parent_node,int node_index,bool isLeaf);
-
+  template <typename N>
+  auto Coalesce(N *neighbor_node, N *node,
+                                BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent, int index,
+                                Transaction *transaction) -> bool;
   // index iterator
   auto Begin() -> INDEXITERATOR_TYPE;
   auto Begin(const KeyType &key) -> INDEXITERATOR_TYPE;
@@ -85,13 +89,20 @@ class BPlusTree {
   auto FindLeafPage(const KeyType &key,bool leftMost = false,bool rightMost = false) -> LeafPage *;
   auto FetchPage(page_id_t page_id) -> BPlusTreePage *;
 
-
-  auto FindSibling(BPlusTreePage *node,BPlusTreePage *sibling_node_out) -> int;
+  template <typename N>
+  auto FindSibling(N *node,N *&sibling_node_out) -> bool;
   void AdjustRoot(BPlusTreePage *p);
 
-  void Redistribute(BPlusTreePage *sibling_node,BPlusTreePage *node,int nodeInParentIndex);
+  template <typename N>
+  void Redistribute(N *neighbor_node, N *node,BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator> *parent, int index,bool from_prev);
 
-  void RemoveMerge(BPlusTreePage *lp);
+  template <typename N>
+  auto CoalesceOrRedistribute(N *node, Transaction *transaction) -> bool;
+
+//  void MoveFirstToEnd(LeafPage *sibling_node,LeafPage *node);
+//  void MoveLastToStart(LeafPage *sibling_page,LeafPage *node,int node_index);
+//  void MoveLastToStart(InternalPage *sibling_page,InternalPage *node);
+//  void MoveFirstToEnd(InternalPage *sibling_page, InternalPage *node);
 
  private:
 
@@ -111,6 +122,7 @@ class BPlusTree {
   KeyComparator comparator_;
   int leaf_max_size_;
   int internal_max_size_;
+  std::mutex latch_;
 };
 
 }  // namespace bustub

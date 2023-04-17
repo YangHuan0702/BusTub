@@ -59,10 +59,17 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   auto KeyIndexPrecise(const KeyType &key,const KeyComparator &comparator) const -> int;
   void Remove(const KeyType &key,const KeyComparator &comparator);
 
-  void MoveAllTo(BPlusTreeLeafPage *target_leaf,bool mostLeaf);
-  void MoveFirst();
-  void MoveSecond();
+  void MoveAllTo(BPlusTreeLeafPage *recipient);
+  void CopyNFrom(MappingType *items, int size);
   void SetItem(const KeyType &key,const ValueType &val,int index);
+//  void MoveFirstToEnd(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager);
+//  void MoveLastToStart(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager,int node_index);
+  void CopyFirstFrom(const MappingType &pair);
+  auto RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) -> int;
+  void MoveFirstToEndOf(BPlusTreeLeafPage *recipient);
+  void CopyLastFrom(const MappingType &item);
+  void MoveLastToFrontOf(BPlusTreeLeafPage *recipient);
+
 
  private:
   page_id_t next_page_id_;

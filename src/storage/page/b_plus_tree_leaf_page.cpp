@@ -10,11 +10,11 @@
 //===----------------------------------------------------------------------===//
 
 #include <sstream>
-
 #include "common/exception.h"
+
 #include "common/rid.h"
 #include "storage/page/b_plus_tree_leaf_page.h"
-#include "include/storage/page/b_plus_tree_internal_page.h"
+
 
 namespace bustub {
 
@@ -183,17 +183,6 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::Remove(const KeyType &key,const KeyComparator &
 }
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirst() {
-    memmove(array_, array_ + 1, static_cast<size_t>(GetSize()*sizeof(MappingType)));
-}
-
-INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveSecond() {
-    memmove(array_ + 1, array_, GetSize()*sizeof(MappingType));
-}
-
-
-INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::SetItem(const KeyType &key,const ValueType &val,int index) {
     assert(index < GetSize());
     array_[index].first = key;
@@ -202,28 +191,113 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::SetItem(const KeyType &key,const ValueType &val
 
 
 INDEX_TEMPLATE_ARGUMENTS
-void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *target_leaf,bool mostLeft) {
-    int start_index = target_leaf->GetSize();
-    int offset = GetSize();
-    if (mostLeft) {
-        for(int index = 0; index < offset; index++) {
-            target_leaf->array_[start_index + index].first = array_[index].first;
-            target_leaf->array_[start_index + index].second = array_[index].second;
-        }
-    }else {
-        for (int index = start_index - 1; index >= 0; index --) {
-            target_leaf->array_[index + offset].first = target_leaf->array_[index].first;
-            target_leaf->array_[index + offset].second = target_leaf->array_[index].second;
-        }
-        for (int index = 0; index < offset; index++) {
-            target_leaf->array_[index].first = array_[index].first;
-            target_leaf->array_[index].second = array_[index].second;
-        }
-    }
-    target_leaf->SetNextPageId(GetNextPageId());
-    target_leaf->IncreaseSize(GetSize());
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *recipient) {
+    recipient->CopyNFrom(array_, GetSize());
+    recipient->SetNextPageId(GetNextPageId());
     SetSize(0);
+
 }
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyNFrom(MappingType *items, int size) {
+    std::copy(items, items + size, array_ + GetSize());
+    IncreaseSize(size);
+}
+//
+//INDEX_TEMPLATE_ARGUMENTS
+//void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirstToEnd(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager) {
+//    const MappingType &item = GetItem(0);
+//
+//    for (int index = 0; index < GetSize() - 1; index++) {
+//        array_[index].first = array_[index + 1].first;
+//        array_[index].second = array_[index + 1].second;
+//    }
+//    sibling_page->array_[sibling_page->GetSize()].first = item.first;
+//    sibling_page->array_[sibling_page->GetSize()].second = item.second;
+//    sibling_page->IncreaseSize(1);
+//
+//
+//    IncreaseSize(-1);
+//    auto *page = bufferPoolManager->FetchPage(sibling_page->GetParentPageId());
+//
+//    auto *internalPage = reinterpret_cast<B_PLUS_TREE_INTERNAL_PAGE_TYPE *>(page->GetData());
+//    int target_index = internalPage->ValueIndex(static_cast<ValueType>(sibling_page->GetPageId()));
+//    internalPage->SetKeyAt(target_index,array_[0].first);
+//    bufferPoolManager->UnpinPage(sibling_page->GetParentPageId(),true);
+//}
+
+
+//INDEX_TEMPLATE_ARGUMENTS
+//void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLastToStart(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager,int node_index) {
+//    const MappingType &item = GetItem(GetSize() - 1);
+//    IncreaseSize(-1);
+//
+//    for (int index = GetSize(); index > 0; index --) {
+//        sibling_page->array_[index].first = sibling_page->array_[index - 1].first;
+//        sibling_page->array_[index].second = sibling_page->array_[index - 1].second;
+//    }
+//    sibling_page->array_[0].first = item.first;
+//    sibling_page->array_[0].second = item.second;
+//    sibling_page->IncreaseSize(1);
+//
+//    auto *page = bufferPoolManager->FetchPage(GetParentPageId());
+//    auto *internalPage = reinterpret_cast<B_PLUS_TREE_INTERNAL_PAGE_TYPE *>(page->GetData());
+//    internalPage->SetKeyAt(node_index,GetItem(GetSize() - 1).first);
+//    bufferPoolManager->UnpinPage(sibling_page->GetParentPageId(),true);
+//}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+int B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) {
+    int firIdxLargerEqualThanKey = KeyIndex(key,comparator);
+    if (firIdxLargerEqualThanKey >= GetSize() || comparator(key,KeyAt(firIdxLargerEqualThanKey)) != 0) {
+        return GetSize();
+    }
+    //quick deletion
+    int tarIdx = firIdxLargerEqualThanKey;
+//    memmove(array_ + tarIdx, array_ + tarIdx + 1,static_cast<size_t>((GetSize() - tarIdx - 1)*sizeof(MappingType)));
+    int offset = static_cast<size_t>((GetSize() - tarIdx - 1)*sizeof(MappingType));
+    for (int index = 0; index < offset; index ++) {
+        array_[tarIdx + index].first = array_[tarIdx + index + 1].first;
+        array_[tarIdx + index].second = array_[tarIdx + index + 1].second;
+    }
+    IncreaseSize(-1);
+    return GetSize();
+}
+
+
+
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirstToEndOf(BPlusTreeLeafPage *recipient) {
+    auto first_item = GetItem(0);
+    std::move(array_ + 1, array_ + GetSize(), array_);
+    IncreaseSize(-1);
+    recipient->CopyLastFrom(first_item);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyLastFrom(const MappingType &item) {
+    assert(GetSize() + 1 <= GetMaxSize());
+    array_[GetSize()] = item;
+    IncreaseSize(1);
+}
+
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLastToFrontOf(BPlusTreeLeafPage *recipient) {
+    auto last_item = GetItem(GetSize() - 1);
+    IncreaseSize(-1);
+    recipient->CopyFirstFrom(last_item);
+}
+
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyFirstFrom(const MappingType &item) {
+    std::move_backward(array_, array_ + GetSize(), array_ + GetSize() + 1);
+    *array_ = item;
+    IncreaseSize(1);
+}
+
 
 template class BPlusTreeLeafPage<GenericKey<4>, RID, GenericComparator<4>>;
 template class BPlusTreeLeafPage<GenericKey<8>, RID, GenericComparator<8>>;
