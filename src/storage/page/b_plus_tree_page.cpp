@@ -19,7 +19,7 @@ namespace bustub {
  */
 auto BPlusTreePage::IsLeafPage() const -> bool { return page_type_ == IndexPageType::LEAF_PAGE; }
 
-auto BPlusTreePage::IsRootPage() const -> bool { 
+auto BPlusTreePage::IsRootPage() const -> bool {
     return parent_page_id_ == INVALID_PAGE_ID;
 }
 
@@ -52,10 +52,12 @@ void BPlusTreePage::SetMaxSize(int size) {
  * Generally, min page size == max page size / 2
  */
 auto BPlusTreePage::GetMinSize() const -> int {
-    if (IsRootPage()) {//why not 0 is min? because 1 is only have a pointer without key, so just equal to empty
-        return IsLeafPage() ? 1 : 2;//root page & leaf page may be empty tree, so is 1; otherwise at least 1 node in root, size 2
+    //  why not 0 is min? because 1 is only have a pointer without key, so just equal to empty
+    if (IsRootPage()) {
+        //  root page & leaf page may be empty tree, so is 1; otherwise at least 1 node in root, size 2
+        return IsLeafPage() ? 1 : 2;
     }
-    return (max_size_ + 1)/ 2;
+    return (max_size_ + 1) / 2;
 }
 
 /*

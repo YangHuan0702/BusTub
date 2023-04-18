@@ -74,14 +74,14 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertNodeAfter(const ValueType &old_value,
     int idx = ValueIndex(old_value) + 1;
     assert(idx > 0);
     IncreaseSize(1);
-    int curSize = GetSize();
-    for (int i = curSize - 1; i > idx; i--) {
+    int cur_size = GetSize();
+    for (int i = cur_size - 1; i > idx; i--) {
         array_[i].first = array_[i - 1].first;
         array_[i].second = array_[i - 1].second;
     }
     array_[idx].first = new_key;
     array_[idx].second = new_value;
-    return curSize;
+    return cur_size;
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -143,7 +143,8 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveHalfTo(BPlusTreeInternalPage *recipient
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::Lookup(const KeyType &key,const KeyComparator &comparator) const -> ValueType {
     assert(GetSize() > 1);
-    int st = 1, ed = GetSize() - 1;
+    int st = 1;
+    int ed = GetSize() - 1;
     while (st <= ed) { //find the last key in array <= input
         int mid = (ed - st) / 2 + st;
         if (comparator(array_[mid].first,key) <= 0) {

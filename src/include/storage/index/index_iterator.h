@@ -47,7 +47,7 @@ namespace bustub {
         // add your own private member variables here
         int index_;
         B_PLUS_TREE_LEAF_PAGE_TYPE *leaf_;
-        BufferPoolManager *bufferPoolManager_;
+        BufferPoolManager *buffer_pool_manager_;
     };
 
 }// namespace bustub

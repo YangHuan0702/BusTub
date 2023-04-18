@@ -64,7 +64,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void SetItem(const KeyType &key,const ValueType &val,int index);
 //  void MoveFirstToEnd(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager);
 //  void MoveLastToStart(BPlusTreeLeafPage *sibling_page,BufferPoolManager *bufferPoolManager,int node_index);
-  void CopyFirstFrom(const MappingType &pair);
+  void CopyFirstFrom(const MappingType &item);
   auto RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) -> int;
   void MoveFirstToEndOf(BPlusTreeLeafPage *recipient);
   void CopyLastFrom(const MappingType &item);

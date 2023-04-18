@@ -42,7 +42,8 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id, in
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::KeyIndex(const KeyType &key,const KeyComparator &comparator) const -> int {
     assert(GetSize() >= 0);
-    int st = 0, ed = GetSize() - 1;
+    int st = 0;
+    int ed = GetSize() - 1;
     while (st <= ed) {
         int mid = (ed - st) / 2 + st;
         if (comparator(array_[mid].first,key) >= 0){
@@ -138,15 +139,15 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveHalfTo(BPlusTreeLeafPage *recipient,__attri
     assert(recipient != nullptr);
     int total = GetMaxSize() + 1;
     assert(GetSize() == total);
-    int copyIdx = total/2;
-    for (int i = copyIdx; i < total; i++) {
-        recipient->array_[i - copyIdx].first = array_[i].first;
-        recipient->array_[i - copyIdx].second = array_[i].second;
+    int copy_idx = total/2;
+    for (int i = copy_idx; i < total; i++) {
+        recipient->array_[i - copy_idx].first = array_[i].first;
+        recipient->array_[i - copy_idx].second = array_[i].second;
     }
     recipient->SetNextPageId(GetNextPageId());
     SetNextPageId(recipient->GetPageId());
-    SetSize(copyIdx);
-    recipient->SetSize(total - copyIdx);
+    SetSize(copy_idx);
+    recipient->SetSize(total - copy_idx);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -247,18 +248,18 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::CopyNFrom(MappingType *items, int size) {
 
 
 INDEX_TEMPLATE_ARGUMENTS
-int B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) {
-    int firIdxLargerEqualThanKey = KeyIndex(key,comparator);
-    if (firIdxLargerEqualThanKey >= GetSize() || comparator(key,KeyAt(firIdxLargerEqualThanKey)) != 0) {
+auto B_PLUS_TREE_LEAF_PAGE_TYPE::RemoveAndDeleteRecord(const KeyType &key, const KeyComparator &comparator) -> int {
+    int fir_idx_larger_equal_than_key = KeyIndex(key,comparator);
+    if (fir_idx_larger_equal_than_key >= GetSize() || comparator(key,KeyAt(fir_idx_larger_equal_than_key)) != 0) {
         return GetSize();
     }
     //quick deletion
-    int tarIdx = firIdxLargerEqualThanKey;
+    int tar_idx = fir_idx_larger_equal_than_key;
 //    memmove(array_ + tarIdx, array_ + tarIdx + 1,static_cast<size_t>((GetSize() - tarIdx - 1)*sizeof(MappingType)));
-    int offset = static_cast<size_t>((GetSize() - tarIdx - 1)*sizeof(MappingType));
+    int offset = static_cast<size_t>((GetSize() - tar_idx - 1)*sizeof(MappingType));
     for (int index = 0; index < offset; index ++) {
-        array_[tarIdx + index].first = array_[tarIdx + index + 1].first;
-        array_[tarIdx + index].second = array_[tarIdx + index + 1].second;
+        array_[tar_idx + index].first = array_[tar_idx + index + 1].first;
+        array_[tar_idx + index].second = array_[tar_idx + index + 1].second;
     }
     IncreaseSize(-1);
     return GetSize();
