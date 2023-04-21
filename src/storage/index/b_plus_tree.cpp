@@ -245,7 +245,7 @@ auto BPLUSTREE_TYPE::CoalesceOrRedistribute(N *node, Transaction *transaction) -
 
     if (idx > 0) {
         auto sibling_page = buffer_pool_manager_->FetchPage(parent_node->ValueAt(idx - 1));
-        sibling_page->WLatch();
+//        sibling_page->WLatch();
         N *sibling_node = reinterpret_cast<N *>(sibling_page->GetData());
 
         if (sibling_node->GetSize() > sibling_node->GetMinSize()) {
