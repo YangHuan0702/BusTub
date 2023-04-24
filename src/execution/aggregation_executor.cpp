@@ -20,7 +20,9 @@ AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const Aggreg
                                          std::unique_ptr<AbstractExecutor> &&child)
     : AbstractExecutor(exec_ctx) {}
 
-void AggregationExecutor::Init() {}
+void AggregationExecutor::Init() {
+    throw NotImplementedException("Not Impl AddregationExecutor");
+}
 
 auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool { return false; }
 

@@ -258,7 +258,7 @@ auto BPLUSTREE_TYPE::CoalesceOrRedistribute(N *node, Transaction *transaction) -
         }
 
         // coalesce
-        auto parent_node_should_delete = Coalesce(sibling_node, node, parent_node, idx, transaction);
+        Coalesce(sibling_node, node, parent_node, idx, transaction);
 
 //        if (parent_node_should_delete) {
 //            transaction->AddIntoDeletedPageSet(parent_node->GetPageId());
@@ -284,7 +284,7 @@ auto BPLUSTREE_TYPE::CoalesceOrRedistribute(N *node, Transaction *transaction) -
         }
         // coalesce
         auto sibling_idx = parent_node->ValueIndex(sibling_node->GetPageId());
-        auto parent_node_should_delete = Coalesce(node, sibling_node, parent_node, sibling_idx, transaction);  // NOLINT
+        Coalesce(node, sibling_node, parent_node, sibling_idx, transaction);  // NOLINT
 //        transaction->AddIntoDeletedPageSet(sibling_node->GetPageId());
 //        if (parent_node_should_delete) {
 //            transaction->AddIntoDeletedPageSet(parent_node->GetPageId());
@@ -428,6 +428,9 @@ void BPLUSTREE_TYPE::AdjustRoot(BPlusTreePage *old_root_node) {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
+    if (IsEmpty()) {
+        return INDEXITERATOR_TYPE(nullptr,0,buffer_pool_manager_);
+    }
     KeyType useless;
     auto start_leaf = FindLeafPage(useless, true, false);
     return INDEXITERATOR_TYPE(start_leaf, 0, buffer_pool_manager_);
@@ -440,6 +443,9 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
+    if (IsEmpty()) {
+        return INDEXITERATOR_TYPE(nullptr,0,buffer_pool_manager_);
+    }
     auto start_leaf = FindLeafPage(key);
     if (start_leaf == nullptr) {
         return INDEXITERATOR_TYPE(start_leaf, 0, buffer_pool_manager_);

@@ -28,7 +28,7 @@ INDEXITERATOR_TYPE::IndexIterator(B_PLUS_TREE_LEAF_PAGE_TYPE *leaf, int index, B
 
 INDEX_TEMPLATE_ARGUMENTS
 auto INDEXITERATOR_TYPE::IsEnd() -> bool {
-    return leaf_->GetNextPageId() == INVALID_PAGE_ID && index_ == leaf_->GetSize();
+    return nullptr == leaf_ || (leaf_->GetNextPageId() == INVALID_PAGE_ID && index_ >= leaf_->GetSize());
 }
 
 INDEX_TEMPLATE_ARGUMENTS
@@ -46,7 +46,6 @@ auto INDEXITERATOR_TYPE::operator++() -> INDEXITERATOR_TYPE & {
     } else {
         index_++;
     }
-
     return *this;
 }
 
